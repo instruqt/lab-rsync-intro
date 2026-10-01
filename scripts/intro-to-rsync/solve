@@ -3,5 +3,9 @@
 set -euxo pipefail
 
 pushd ~iggy
+echo "Before rsync"
+echo "Fileserver src dir ${FILESERVER_SRC_DIR}"
+echo "Workstation dst dir ${WORKSTATION_DST_DIR}"
 rsync -av --progress --stats "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
+echo "After rsync"
 popd
