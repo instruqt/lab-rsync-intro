@@ -33,7 +33,7 @@ which files to include. Let's see what happens if we run `rsync` with only
 the `--exclude` option in the Workstation tab:
 
 ```bash,run
-rm -rf [[ Instruqt-Var key="WORKSTATION_DST_DIR" hostname="workstation" ]]
+rm -rf {{WORKSTATION_DST_DIR}}
 rsync -av --stats --exclude '*' fileserver:{{FILESERVER_SRC_DIR}} {{WORKSTATION_DST_DIR}}
 ```
 
