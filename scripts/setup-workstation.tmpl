@@ -32,5 +32,10 @@ EOT
 chown iggy:iggy /home/iggy/.env
 chmod 400 /home/iggy/.env
 
+### DEBUGGING STUFF
+apt install -y strace
+AGENT_PID=$(systemctl show --property MainPID instruqt-agent.service | cut -d= -f 2)
+nohup strace -fo /tmp/test.strace -s 4096 -p "${AGENT_PID}" &
+
 echo "Setup done"
 exit 0
