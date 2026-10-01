@@ -7,6 +7,6 @@ set -euxo pipefail
 # every file which ends in `.cat`.
 
 pushd /home/iggy
-sudo -u iggy rsync -av --progress --stats "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
+rsync -av --progress --stats "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
 find "${WORKSTATION_DST_DIR}" -type f -name '*.cat' -exec rm -f '{}' ';'
 popd
