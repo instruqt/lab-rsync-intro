@@ -28,6 +28,10 @@ resource "lab" "rsync-intro" {
       page "incremental-update" {
         reference = resource.page.incremental-update
       }
+
+      page "selective-transfers" {
+        reference = resource.page.selective-transfers
+      }
     }
   }
 }

@@ -20,3 +20,17 @@ resource "page" "incremental-update" {
     incremental-update = resource.task.incremental-update
   }
 }
+
+resource "page" "selective-transfers" {
+  title = "Selective Transfers"
+  file  = "instructions/selective-transfers.md"
+
+  variables = {
+    WORKSTATION_DST_DIR = local.workstation_dst_dir
+    FILESERVER_SRC_DIR  = local.fileserver_src_dir
+  }
+
+  activities = {
+    selective-transfers = resource.task.selective-transfers
+  }
+}
