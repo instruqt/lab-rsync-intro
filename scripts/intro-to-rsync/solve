@@ -3,5 +3,5 @@
 set -euxo pipefail
 
 pushd ~iggy
-rsync -av --progress --stats fileserver:${FILESERVER_SRC_DIR} ${WORKSTATION_DST_DIR}
+rsync -av --progress --stats "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
 popd
