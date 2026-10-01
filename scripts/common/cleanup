@@ -4,4 +4,4 @@ set -euxo pipefail
 
 # Clean this directory in preparation for the next page
 
-rm -rf /home/iggy/vosp_1000/
+rm -rf "~iggy/${WORKSTATION_DST_DIR}"

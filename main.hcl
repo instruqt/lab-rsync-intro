@@ -24,6 +24,10 @@ resource "lab" "rsync-intro" {
       page "intro-to-rsync" {
         reference = resource.page.intro-to-rsync
       }
+
+      page "incremental-update" {
+        reference = resource.page.incremental-update
+      }
     }
   }
 }
