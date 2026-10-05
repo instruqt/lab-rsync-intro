@@ -28,6 +28,22 @@ resource "vm" "workstation" {
     FILESERVER_SRC_DIR           = local.fileserver_src_dir
     WORKSTATION_DST_DIR          = local.workstation_dst_dir
   })
+
+  # Check for existence of startup script "DONE" file
+  health_check {
+    timeout = "30s"
+
+    exec {
+      exit_code = 0
+      script    = <<-EOT
+        #!/bin/bash
+        until $(stat /root/.state/setup-workstation.DONE >/dev/null 2>&1); do
+          sleep 1
+        done
+        exit 0
+      EOT
+    }
+  }
 }
 
 resource "vm" "fileserver" {
@@ -53,4 +69,29 @@ resource "vm" "fileserver" {
   startup_script = template_file("./scripts/setup-fileserver.tmpl", {
     IGGYS_SSH_PRIVATE_KEY_BASE64 = resource.secret.ssh_key.value
   })
+
+  # SSH listening
+  health_check {
+    timeout = "30s"
+
+    tcp {
+      port = 22
+    }
+  }
+
+  # Check for existence of startup script "DONE" file
+  health_check {
+    timeout = "30s"
+
+    exec {
+      exit_code = 0
+      script    = <<-EOT
+        #!/bin/bash
+        until $(stat /root/.state/setup-fileserver.DONE >/dev/null 2>&1); do
+          sleep 1
+        done
+        exit 0
+      EOT
+    }
+  }
 }
