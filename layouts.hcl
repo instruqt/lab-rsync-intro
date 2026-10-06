@@ -15,6 +15,7 @@ resource "layout" "default" {
     }
 
     tab "workstation-root" {
+      disabled  = local.in_development ? false : true
       title     = "Workstation ROOT (For Dev Only)"
       target    = resource.terminal.workstation-root
       closeable = false
