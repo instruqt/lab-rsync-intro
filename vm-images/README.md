@@ -55,7 +55,9 @@ and the following annotations:
 * `org.opencontainers.image.title` with the value `instruqt-agent-bootstrap` (required)
 * `org.opencontainers.image.description` with the value set to a description (optional)
 
-All of this is handled by the [build.sh](./build.sh) script in this repository.
+All of this is handled by the [build.sh](./build.sh) script in this repository. The
+[instruqt-agent script](./packer/scripts/instruqt-agent) adds the [instruqt-agent.service](./packer/scripts/instruqt-agent.service)
+systemd unit file, as well as zeroing out `/etc/machine-id` and removing host ssh keys.
 
 Pre-requisites
 --------------
