@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+# Does the expected target directory exist?
+
+if [ ! -d /home/iggy/vosp_1000 ]; then
+    exit 1
+fi
+
+exit 0

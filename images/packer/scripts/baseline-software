@@ -1,0 +1,20 @@
+#!/bin/bash
+# Copyright (C) 2026, Instruqt. All Rights Reserved.
+
+set -euxo pipefail
+
+BASELINE_SOFTWARE=(
+    rsync
+)
+
+function setup_fail () {
+    echo "##### SETUP FAIL #####" "$@"
+    exit 1
+}
+
+
+echo "Installing required software"
+
+export DEBIAN_FRONTEND="noninteractive"
+sudo apt update || setup_fail "Apt update failed"
+sudo apt install -y --no-install-recommends "${BASELINE_SOFTWARE[@]}"

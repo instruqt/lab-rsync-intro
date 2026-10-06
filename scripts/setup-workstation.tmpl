@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+function setup_fail () {
+    echo "##### SETUP FAIL #####" "$@"
+    exit 1
+}
+
+
+# Install SSH key from org secret
+echo "Install ssh key from org secret"
+install -d -o iggy -g iggy -m 700 /home/iggy/.ssh || setup_fail "Creating iggy ssh dir"
+pushd /home/iggy/.ssh
+echo "{{IGGYS_SSH_PRIVATE_KEY_BASE64}}" | base64 -d > id_ed25519
+chown iggy:iggy id_ed25519
+chmod 400 id_ed25519
+ssh-keygen -f id_ed25519 -y > id_ed25519.pub
+cp id_ed25519.pub authorized_keys
+chown iggy:iggy id_ed25519.pub authorized_keys
+chmod 400 id_ed25519.pub authorized_keys
+popd
+
+# Set some variables for the fileserver directory and the local
+# target directory. This way we can quickly change those and all
+# references to them update automatically
+
+cat <<EOT > /home/iggy/.env
+FILESERVER_SRC_DIR="{{FILESERVER_SRC_DIR}}"
+WORKSTATION_DST_DIR="{{WORKSTATION_DST_DIR}}"
+EOT
+chown iggy:iggy /home/iggy/.env
+chmod 400 /home/iggy/.env
+
+echo "Setup done"
+exit 0

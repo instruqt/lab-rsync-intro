@@ -1,0 +1,24 @@
+# From instruqt/lab-sdk/build/images/bootstrap/instruqt-agent.service
+# commit 5a5a282
+
+[Unit]
+Description=Instruqt agent
+# Out-of-band access must survive a broken guest boot or network, so the agent
+# starts at sysinit with no default ordering and depends only on the agent disk
+# (vdb, present from boot) — not on multi-user.target or the network.
+DefaultDependencies=no
+After=systemd-remount-fs.service
+Before=sysinit.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p /opt/instruqt
+# The agent disk is the second virtio disk; setupNativeBoot attaches it at
+# IndexAgentDisk (base=vda, agent=vdb), matching the initramfs boot path.
+ExecStartPre=/bin/mount -o ro /dev/vdb /opt/instruqt
+ExecStart=/opt/instruqt/usr/bin/agent
+Restart=on-failure
+
+[Install]
+WantedBy=sysinit.target
+

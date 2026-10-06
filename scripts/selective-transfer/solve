@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+pushd /home/iggy
+
+# We run *every* command we tell iggy to run
+
+rsync -av --stats --include '*.lbl' "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
+rm -rf "${WORKSTATION_DST_DIR}"
+rsync -av --stats --exclude '*' "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
+rsync -av --stats --exclude '*' --include '*.lbl' "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
+rsync -av --stats --include '*.lbl' --exclude '*' "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
+rsync -av --stats --include '*.lbl' --include '*/' --exclude '*' "fileserver:${FILESERVER_SRC_DIR}" "${WORKSTATION_DST_DIR}"
+
+popd

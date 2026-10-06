@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Mimic the command iggy should have ran, but in a temporary
+# directory so we can do a file comparision
+
+TESTDIR=$(mktemp -d)
+pushd "${TESTDIR}"
+rsync -av --progress --stats fileserver:/opt/data/vosp_1000/ vosp_1000/
+
+# Now use three rsync options to verify that the directories are identical
+#   --dry-run         - don't actually do anything which would touch a file, but-
+#   --itemize-changes - print out an itemized list of changes being made to each file
+#   --delete          - delete any file in the destination not at the source
+#
+# If we do that and get no output, the two directories are identical. If you do not
+# use the `--delete` option if you have, say, an empty source directory, or files
+# missing in the source, then `--itemize-changes` won't show anything because by
+# default rsync doesn't delete files.
+
+ITEMIZED=$(mktemp)
+
+# shellcheck disable=SC2024
+rsync -a \
+    --dry-run \
+    --itemize-changes \
+    --delete \
+    /home/iggy/vosp_1000/ \
+    vosp_1000/ > "${ITEMIZED}"
+
+if [ -s "${ITEMIZED}" ]; then
+    exit 1
+fi
+popd
+
+# If we got here, we're good, cleanup
+rm -rf "${TESTDIR}"
+rm -f "${ITEMIZED}"
+
+exit 0

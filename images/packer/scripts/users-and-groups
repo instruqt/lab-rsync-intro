@@ -1,0 +1,27 @@
+#!/bin/bash
+# Copyright (C) 2026, Instruqt. All Rights Reserved.
+
+set -euxo pipefail
+
+function setup_fail () {
+    echo "##### SETUP FAIL #####" "$@"
+    exit 1
+}
+
+
+echo "Create 'data' group"
+sudo groupadd data || setup_fail "Creating 'data' group failed"
+
+echo "Install 'iggy' user - our learner does not run as root"
+sudo useradd -c "Iggy Instruqt" -G data -m -u 1137 -s /bin/bash iggy ||
+    setup_fail "Creating user 'iggy'"
+
+# Create .ssh directory
+sudo install -d -o iggy -g iggy -m 700 /home/iggy/.ssh ||
+    setup_fail "Creating iggy ssh directory"
+
+# Configure SSH Trust on First Use (ToFU)
+cat | sudo tee /home/iggy/.ssh/config <<EOT
+Host *
+  StrictHostKeyChecking accept-new
+EOT
