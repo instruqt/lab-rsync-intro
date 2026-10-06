@@ -50,18 +50,23 @@ function help {
     echo "               ${DEFAULT_REGISTRY}"
     echo " -t TAG      - Set the image tag to TAG. Optional, defaults to"
     echo "               Unix epoch timestamp"
+    echo " -h          - Print this help"
     echo
 }
 
 
 # Get arguments
-while getopts t:r: FLAG; do
+while getopts t:r:h FLAG; do
     case ${FLAG} in
 	t)  # version flag
 	    TAG="${OPTARG}"
 	    ;;
 	r)  # registry flag
 	    REGISTRY="${OPTARG}"
+	    ;;
+	h)  # help
+	    help
+	    do_exit 0
 	    ;;
 	\?) # Unrecognized option
 	    echo "Unrecognized option '${OPTARG}'" 1>&2
