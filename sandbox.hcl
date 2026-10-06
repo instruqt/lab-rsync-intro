@@ -53,4 +53,13 @@ resource "vm" "fileserver" {
   startup_script = template_file("./scripts/setup-fileserver.tmpl", {
     IGGYS_SSH_PRIVATE_KEY_BASE64 = resource.secret.ssh_key.value
   })
+
+  # SSH listening
+  health_check {
+    timeout = "30s"
+
+    tcp {
+      port = 22
+    }
+  }
 }

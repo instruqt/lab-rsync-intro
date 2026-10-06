@@ -7,4 +7,3 @@ local "fileserver_src_dir" {
 local "workstation_dst_dir" {
   value = "vosp_1000/"
 }
-
