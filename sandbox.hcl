@@ -4,9 +4,6 @@ resource "network" "main" {
 }
 
 resource "vm" "workstation" {
-  
-  depends_on = [resource.exec.sandbox-debug]
- 
   config {
     arch = "x86_64"
   }
@@ -31,28 +28,9 @@ resource "vm" "workstation" {
     FILESERVER_SRC_DIR           = local.fileserver_src_dir
     WORKSTATION_DST_DIR          = local.workstation_dst_dir
   })
-
-  # Check for existence of startup script "DONE" file
-  health_check {
-    timeout = "30s"
-
-    exec {
-      exit_code = 0
-      script    = <<-EOT
-        #!/bin/bash
-        until $(stat /root/.state/setup-workstation.DONE >/dev/null 2>&1); do
-          sleep 1
-        done
-        exit 0
-      EOT
-    }
-  }
 }
 
 resource "vm" "fileserver" {
-
-  depends_on = [resource.exec.sandbox-debug]
-
   config {
     arch = "x86_64"
   }
@@ -84,41 +62,4 @@ resource "vm" "fileserver" {
       port = 22
     }
   }
-
-  # Check for existence of startup script "DONE" file
-  health_check {
-    timeout = "30s"
-
-    exec {
-      exit_code = 0
-      script    = <<-EOT
-        #!/bin/bash
-        until $(stat /root/.state/setup-fileserver.DONE >/dev/null 2>&1); do
-          sleep 1
-        done
-        exit 0
-      EOT
-    }
-  }
-}
-
-resource "exec" "sandbox-debug" {
-  run_as {
-    user  = "root"
-    group = "root"
-  }
-
-  environment = {
-    IGGYS_SSH_PRIVATE_KEY_BASE64 = resource.secret.ssh_key.value
-  }
-
-  # We do this, instead of using the `disabled` field for this resource
-  # because when local.debug_sandbox_host is true we want this to run
-  # *AND* we want the VMs above to wait for it to happen, but when we
-  # set that to false I'm not sure we can depend on a resource which
-  # is disabled. So we decide which script to run, the one where
-  # debug_sandbox_host is false is a no-op. Wastes some time, but
-  # :shrug:
-
-  script = local.debug_sandbox_host ? "./scripts/sandbox-debug" : "./scripts/sandbox-debug-null"
 }
