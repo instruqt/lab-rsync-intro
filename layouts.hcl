@@ -13,13 +13,6 @@ resource "layout" "default" {
       target    = resource.virtual_browser.rsync-docs
       closeable = false
     }
-
-    tab "workstation-root" {
-      disabled  = local.in_development ? false : true
-      title     = "Workstation ROOT (For Dev Only)"
-      target    = resource.terminal.workstation-root
-      closeable = false
-    }
   }
 
   column {
