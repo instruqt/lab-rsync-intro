@@ -17,9 +17,9 @@ TMP=$(mktemp -d); ssh-keygen -t ed25519 -f "${TMP}/id_ed25519" -N "" >/dev/null;
 **NOTE**: Your variant of `base64` or equivalent may have different command-line flags,
 the output must have no line breaks.
 
-## Annotated Lab Guide
+# Annotated Lab Guide
 
-### Background
+## Background
 
 The *Lab* is a basic unit of content on Instruqt, and what a learner interacts with.
 Every time a learner starts a Lab, they get a unique, isolated instance of that Lab,
@@ -82,7 +82,7 @@ attribute, but we can _use_ the value elsewhere.
 There are two major components of an Instruqt Lab: _Content Resources_, and _Sandbox
 Resources_.
 
-### Code Conventions
+## Code Conventions
 
 There are only two strict requirements for your HCL code:
 
@@ -102,7 +102,7 @@ or that page's instructions might reference an image in `assets/rsync-logo.png`.
 In fact, it is encouraged that you do so, to help organize files in a way
 which is tidy and makes sense.
 
-### Sandbox Resources
+## Sandbox Resources
 
 [Sandbox Resources](https://docs.labs.instruqt.com/reference/sandbox/) are the infrastructure
 within a Lab sandbox: the VMs, containers, networks, cloud accounts, etc. These create the
@@ -112,7 +112,7 @@ terminal, service, or editor, etc. In this lab they are primarily defined in the
 
 This sandbox is pretty simple: a couple secrets, a shared network, and two virtual machines.
 
-#### Secrets
+### Secrets
 
 [Secrets](https://docs.labs.instruqt.com/reference/sandbox/secrets/secret/) are a resource
 which fetches a secret defined in your Instruqt team and makes it available for use within
@@ -126,7 +126,7 @@ use the new value the next time it is launched.
 In this Lab we define two secrets, `ssh_key` and `lab_images_reader_b64`.
 We'll show you how you use them when we talk about creating VMs later.
 
-#### Networks
+### Networks
 
 A virtual machine without a network isn't all that useful, so we've created a
 [network](https://docs.labs.instruqt.com/reference/sandbox/networking/network/).
@@ -139,7 +139,7 @@ This defines the [CIDR block](https://en.wikipedia.org/wiki/Classless_Inter-Doma
 addresses we want on this network. We do not use IPv6 in this Lab, so we leave out
 the optional `enable_ipv6` attribute, which defaults to `false`.
 
-#### Virtual Machines
+### Virtual Machines
 
 We have two [virtual machines](https://docs.labs.instruqt.com/reference/sandbox/compute/vm/)
 in this Lab, a `workstation` and a `fileserver`. They're very similar, so let's walk
@@ -182,7 +182,7 @@ Finally we have an optional attribute, `startup_script`, which will run when the
 created. Here we use it to do some configuration of the VM at the start of the lab. There
 are two interesting things here, which we'll conver in turn.
 
-##### Functions
+#### Functions
 
 [_Functions_](https://docs.labs.instruqt.com/reference/functions/) allow you to manipulate
 HCL expressions. The VM `startup_script` only accepts a string. You could pass it a string
@@ -203,7 +203,8 @@ as a secret (as we went over above), and that could be updated any time, the eff
 that when the Lab sandbox is created it will fetch the current value of the secret, render it
 in the startup file, and pass that to the VM to run.
 
-##### Local Resources
+#### Local Resources
+
 A [_Local Resource_](https://docs.labs.instruqt.com/reference/types/local/) is a computed
 value in your HCL configuration. Here we use it for some simple configuration, which
 we put in the [`conf.hcl`](conf.hcl) file (remember, of course, that this is a convention,
@@ -212,6 +213,322 @@ use cases, which the documentation covers, and they help with reducing duplicati
 need to use the same value many times, as well as allowing you to turn a large and hard
 to understand expression into a series of more understandable intermediate values.
 
+### Other Resources
 
-### Content Resources
+There are many other resources available on the Instruqt platform which are not used in
+this lab, including things like containers and cloud accounts. Check out the
+[overview](https://docs.labs.instruqt.com/reference/content/) for the full list.
 
+## Content Resources
+
+[Content Resources](https://docs.labs.instruqt.com/reference/content/) are the material
+and interactive elements the learner experiences during a Lab. Think of it as the user
+interface of Labs.
+
+Every Lab contains one and only one top-level resource, a [`lab`](https://docs.labs.instruqt.com/reference/content/lab/).
+A `lab` contains some metadata and [`settings`](https://docs.labs.instruqt.com/reference/content/lab/#settings),
+and also has [`content`](https://docs.labs.instruqt.com/reference/content/lab/#content). Within
+the `content` is one or more [`chapter`s](https://docs.labs.instruqt.com/reference/content/lab/#content-chapter),
+which in turn contain one or more [`page`s](https://docs.labs.instruqt.com/reference/content/lab/#content-chapter-page). You control the appearance of `page`s with [`layout`s](https://docs.labs.instruqt.com/reference/content/layout/), which can be set generically at the `lab` level and then overridden at the `chapter` and `page` level.
+The following diagram gives a feel for the hierarchy of resources:
+
+```
+lab
+├─ title, description (metadata)
+├─ layout (reference to default layout)
+├─ settings
+│  ├─ theme
+│  ├─ timelimit
+│  │  ├─ duration, extend, show_timer
+│  ├─ idle
+│  │  ├─ enabled, timeout, show_warning
+│  └─ controls
+│     └─ show_stop
+└─ content
+   ├─ title
+   └─ chapters[]
+      ├─ title, layout (optional override)
+      └─ pages[]
+         ├─ title (optional override), layout (optional override)
+         └─ reference (to page resource)
+```
+
+Finally, pages can (and should!) include [`task`s](https://docs.labs.instruqt.com/reference/content/task/),
+interactive activities that your learners complete during the lab. Tasks are what turn passive observation
+into active learning.
+
+Let's examine each layer in turn.
+
+### Lab
+
+This Lab defines its single `lab` resource in [main.hcl](main.hcl). As noted above, this is
+a convention; you could place the `lab` resource in any valid HCL file.
+
+Our `lab` sets the `title` and `description`, and configures some [`settings`](https://docs.labs.instruqt.com/reference/content/lab/#settings), controlling the lab time limit and idle time configuration.
+A Lab requires a maximum duration, which can be optionally extended, and optionally 
+can be configured for how long it can sit idle before it goes away. A Lab, once started,
+lasts until one of the following things happens:
+
+1. A learner completes the lab
+2. A learner stops the lab
+3. A configured idle time has expired
+4. The configured maximum duration has expired
+
+In this Lab we configure the `timelimit` to be 15 minutes, and the `idle` timeout
+to be 5 minutes.
+
+Next our Lab configures a `layout` --- this required setting configures the page layout
+that should be default for the Lab, which can be overridden at both the `chapter` and
+`page` layers. This Lab is fairly simple, so it has only one default layout.
+
+Finally, the `lab` configures the `content`. Before we get to that, let's look at
+the Lab layout.
+
+### Layout
+
+In this Lab the [layout](https://docs.labs.instruqt.com/reference/content/layout/) is
+defined in [`layouts.hcl`](layouts.hcl). A `layout` has one or more `column`s, which
+contains either one or more `row`s or one or more `tabs`. A `row` then contains one
+or more `tabs`. With this you could have a simple layout, like this lab has:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                                  Lab                                           │
+│  ┌─────────────────────────────────────────────────────┐ ┌───────────────────┐ │
+│  │ ┌──────┐ ┌──────┐                                   │ │     Assignment    │ │
+│  │ │ Tab  │ │ Tab  │                                   │ │                   │ │
+│  │ ├──────┤ └──────┘                                   │ │                   │ │
+│  │ │      └─────────────────────────────────────────┐  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ └────────────────────────────────────────────────┘  │ │                   │ │
+│  │                                                     │ │                   │ │
+│  └─────────────────────────────────────────────────────┘ └───────────────────┘ │
+└────────────────────────────────────────────────────────────────────────────────┘
+```
+
+Or something more complex:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                                  Lab                                           │
+│  ┌─────────────────────────────────────────────────────┐ ┌───────────────────┐ │
+│  │ ┌──────┐ ┌──────┐                                   │ │     Assignment    │ │
+│  │ │ Tab  │ │ Tab  │                                   │ │                   │ │
+│  │ ├──────┤ └──────┘                                   │ │                   │ │
+│  │ │      └─────────────────────────────────────────┐  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ │                                                │  │ │                   │ │
+│  │ └────────────────────────────────────────────────┘  │ │                   │ │
+│  └─────────────────────────────────────────────────────┘ │                   │ │
+│  ┌─────────────────────────────────────────────────────┐ │                   │ │
+│  │  Tab                                                │ │                   │ │
+│  │                                                     │ │                   │ │
+│  │                                                     │ │                   │ │
+│  │                                                     │ │                   │ │
+│  └─────────────────────────────────────────────────────┘ └───────────────────┘ │
+└────────────────────────────────────────────────────────────────────────────────┘
+```
+
+This Lab has two rows. The one on the left, which has a `width` of `70%` (so it
+will take 70% of the screen), has two tabs.
+
+One or more tabs can exist in a column or row, with one being active at any time.
+This Lab has a [`terminal`](https://docs.labs.instruqt.com/reference/sandbox/ui/terminal/)
+tab, and a [`virtual_browser`](https://docs.labs.instruqt.com/reference/sandbox/ui/virtualbrowser/)
+tab. Other tabs can include exposing a [`service`](https://docs.labs.instruqt.com/reference/sandbox/ui/service/),
+a browser-based text [`editor`](https://docs.labs.instruqt.com/reference/sandbox/ui/editor/),
+or [`cloud_credentials`](https://docs.labs.instruqt.com/reference/sandbox/ui/cloud-credentials/).
+
+Along with optional settings like the tab `title`, each `tab` requires a `target`,
+which references the resource which is in that `tab`.
+
+### Terminal
+
+A `terminal` resource is just that, a terminal on either a VM or a container in
+the sandbox, which you specify by configuring the `target` --- in this Lab,
+the `target` is `resource.vm.workstation`, one of the VMs that is in the Lab
+sandbox. You can also define the `user` and `group` this terminal runs as,
+the `shell` being used, and the `working_directory` the terminal starts in.
+All of those must exist on the `target` resource.
+
+### Virtual Browser
+
+A `virtual_browser` embeds a virtual web browser in a tab. This allows you to
+display a web page within a tab without having to make your learner open up a
+browser tab or window outside of the Lab window. Here we use it to display
+the webpage for the `rsync` documentation.
+
+### Instructions
+
+Of course, a Lab with resources isn't that useful to your learner if you don't
+provide them guidance on what to do. This is where the `instructions` comes in.
+This is where in the `layout` you expose the `chapter`s and `page`s to your
+learner.
+
+In this Lab, we put the `instructions` in the second column.
+
+### Chapters and Pages
+
+Chapters and pages are how you break up your instructions to manageable, consumable
+content for your learners. How you break that up depends on the complexity of your
+instructions. A simple Lab, like this one, just has three pages. But a more complex
+Lab may have multple chapters, each with multiple pages. Ultimately, though, you
+have a series of pages; chapters are ways of logically grouping them together so they
+are coherent for your learners.
+
+When deciding how to break up a Lab into chapters and pages, some criteria should
+be used:
+
+1. Each `page` should have a single, concrete concept you are trying to convey to
+   your learners. It should include a `task` to ensure the learner understands
+   that concrete concept before moving on
+2. Group together related `page`s by putting them in a chapter. For example,
+   you may have a Lab where you configure a service, and then use it. If configuring
+   the service requires, say, three distinct steps, then it makes sense to have
+   a "configuration" chapter with a page for each step. This could then be followed
+   by a chapter where you use the configuration your learner just configured.
+
+#### Chapter
+
+This Lab is fairly simple, and doesn't even really need a `chapter`. As you can see
+in [`main.hcl`](main.hcl), you can create a special `chapter "__default"` resource
+to do that.
+
+#### Pages
+
+In that default `chapter`, this Lab has three pages. Each of those is a separate
+`page` resource, and each of those `page`s has a `task` for the user to complete.
+
+The default convention is to define all pages in a `content.hcl` file, and all tasks
+in a `tasks.hcl` file, but that is just content. In this Lab, we group a page and
+its task in separate HCL files, one per page. Let's look at the page for
+"Selective Transfers", located in [`selective-transfers.hcl`](selective-transfers.hcl).
+
+The `selective-transfers` `page` must have a `title` and a `file` configured, and
+then optionally may define `variables` and `activities`. We set the title with
+`title = "Selective Transfers"`, and then point to the file containing the actual
+content with `file = "instructions/selective-transfers.md"`
+
+Content is defined with [Markdown syntax](https://docs.labs.instruqt.com/ui-overview/adding-content/markdown-editor/#markdown-syntax-reference). You can write the Markdown manually, or use the
+in-platform [Content Editor](https://docs.labs.instruqt.com/ui-overview/adding-content/markdown-editor/).
+
+There are a few useful things you can include in the Markdown.
+
+##### Variable Substitution
+
+Note that in [`selective-transfers.hcl`](selective-transfers.hcl) we have this
+in our `page` resource:
+
+```
+  variables = {
+    WORKSTATION_DST_DIR = local.workstation_dst_dir
+    FILESERVER_SRC_DIR  = local.fileserver_src_dir
+  }
+```
+
+These set [variables](https://docs.labs.instruqt.com/reference/content/page/#variable-substitution) which
+may be substituted in the Markdown text. So, with the above `variables` set, the lines in
+[`instructions/selective-transfers.md`](instructions/selective-transfers.md) like this:
+
+```
+rsync -av --stats --exclude '*' --include '*.lbl' fileserver:{{FILESERVER_SRC_DIR}} {{WORKSTATION_DST_DIR}}
+```
+
+Will have `{{FILESERVER_SRC_DIR}}` and `{{WORKSTATION_DST_DIR}`` set to the runtime
+values of those two variables, allowing your instructions to be dynamic. Here we use it
+to allow us to configure those two variables as locals in [`conf.hcl`](conf.hcl), making
+it easy to change the configuration of the Lab by changing it in `conf.hcl` and then
+referencing it everywhere else within the Lab. But, you might also use it to, say, create
+dynamic credentials for a service running in a Lab and then instructing the learner to
+log in with those specific credentials in the instructions.
+
+##### Interactive Activities
+
+Note at the bottom of [`instructions/selective-transfers.md`](instructions/selective-transfers.md)
+the following two lines:
+
+```
+<instruqt-task id="selective-transfers"></instruqt-task>
+
+<instruqt-completion text="And now you know very little about the rsync file transfer tool!"></instruqt-completion>
+```
+
+The first line includes the `selective-transfers` task at that point in the instructions.
+We'll talk about that next. The final line provides a [completion component]
+(https://docs.labs.instruqt.com/ui-overview/adding-content/completion/), which will show
+the learner's progress throughout the Lab, and gives them a "Finish & Exit" button when they
+have completed every task. Without this, the learner has no clean way to exit the Lab;
+they could just close the window, but that leaves the Lab sandbox running until a timeout
+happens.
+
+### Tasks
+
+A [`task`](https://docs.labs.instruqt.com/reference/content/task/) resource defines an interactive
+activity a learner must complete to finish the Lab. Each task can have one or more
+conditions, each of which can have its own `setup`, `check`, `solve`, and `cleanup` scripts.
+Let's look again at [`instructions/selective-transfers.md`](instructions/selective-transfers.md)
+
+A `task` resource must have a `description`, which gives a short explanation of what you are
+asking the learner to do. This task also sets the optional `success_message`, which is displayed
+to the user when the successfully complete the task.
+
+A `task` can also include an optional `config`, which becomes the default configuration for
+each `condition` in this `task`. You can override that at both the `condition` level, as well
+as at the `setup`, `check`, `solve`, and `cleanup` levels.
+
+Here the `config` section sets the `target`, where you actually want the `task` to run, as
+well as the `user`, `group`, `working_directory` where it should run. It also defines a
+`timeout` for how long we allow the task to run, and defines both which exit codes from
+the tasks scripts are considered a successful completion with `success_exit_codes` as well
+as defining which exit codes are considered `failure_exit_codes`. Finally, it configures
+an `environment`, defining environment variables which will be available to the task scripts.
+
+#### Conditions
+
+This task contains a single `condition`, which is a collection of validations which must
+all happen for the task to complete. Multiple `conditions` are supported. The `condition`
+has a `description`, which explains to the learner what the condition is doing.
+
+##### Checks
+
+A `check` is ran when the learner clicks on the button to run the task. It configures
+a `script` which is ran, as well as a `failure_message` to display if the script returns any of
+the `failure_exit_codes`.
+
+A `check` script should check for one and only one thing, and simply return one of the
+configured exit codes to indicate success or failure. No output is returned to the user;
+if the script returns one of the `failure_exit_codes` the `failure_message` is what
+is displayed to the learner.
+
+The `check` script can be written in any language, but the interpreter for that script
+must already be installed on the `target`.
+
+#### Solve
+
+A `solve` script is ran if the learner skips that particular `task`. It should perform
+the same actions you asked the learner to do.
+
+#### Setup
+
+A `setup` script runs when the page with this `task` embedded in it is displayed.
+It can be used to ensure the Lab is ready for that particular page, and an example
+of one can be found in [`incremental-update.hcl`](incremental-update.hcl)
+
+#### Cleanup
+
+Conversely, a `cleanup` script runs when a page is exited, and can be used to clean up
+anything done by this page before moving to the next.
+
+### Testing
+
+Task scripts are also used in [Automated Testing](https://docs.labs.instruqt.com/development/automated-testing/).
