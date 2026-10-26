@@ -40,7 +40,7 @@ source "qemu" "workstation" {
   disk_image      = true
 
   output_directory = var.image_output_directory
-  vm_name          = "sgl-rsync-workstation"
+  vm_name          = "sgl-rsync-workstation.qcow2"
   format           = "qcow2"
 
 
@@ -78,7 +78,7 @@ source "qemu" "fileserver" {
   disk_image      = true
 
   output_directory = var.image_output_directory
-  vm_name          = "sgl-rsync-fileserver"
+  vm_name          = "sgl-rsync-fileserver.qcow2"
   format           = "qcow2"
 
 
