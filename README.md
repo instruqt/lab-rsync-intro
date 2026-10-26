@@ -110,7 +110,18 @@ environment in which your Learner operates and the ways that they access them, l
 terminal, service, or editor, etc. In this lab they are primarily defined in the file
 [sandbox.hcl](sandbox.hcl)
 
-This sandbox is pretty simple: a couple secrets, a shared network, and two virtual machines.
+This sandbox is pretty simple: a variable, a couple secrets, a shared network, and two virtual machines.
+
+### Variables
+[Variables](https://docs.labs.instruqt.com/reference/types/variable/) define input parameters
+which can be used throughout your lab configuration, and provide a way to parameterize lab
+configuration. With this, you can allow values to be customized without having to modify
+the core configuration.
+
+In this lab, we only use a single [System Variable](https://docs.labs.instruqt.com/reference/types/variable/#system-variables), one which is supplied automatically by the Instruqt platform. We use that and
+will talk about it in the section about creating our lab virtual machines.
+
+You can also [set variables at launch](https://docs.labs.instruqt.com/reference/types/variable/#setting-variables-at-launch) which can be a useful way to customize a lab.
 
 ### Secrets
 
@@ -147,11 +158,15 @@ through the `workstation` VM.
 
 The `config` and `resources` blocks define basic settings for the VM: what CPU architecture
 it is, and the number of CPUs and the amount of memory to give this VM. We also define
-the `image` the VM boots from. In this case, we use a custom image hosted in a private
+the `image` the VM boots from. In this case, we use a custom image hosted in the platform
 repository. More details on that can be found in the [README file](vm-images/README.md)
-in the `vm-images` directory. This VM is attached to the `main` network, so we only
-have one `network` block.
+in the `vm-images` directory. Note that the `name` parameter in the `image` block
+uses `${variable.instruqt_team_slug}` instead of a hardcoded team slug. It is replaced at
+runtime with the "slug" of whatever team has this lab, so instead of hardcoding `test-drive`
+we use a variable. This allows customers who have multiple teams to use a lab definition in
+multiple teams.
 
+This VM is attached to the `main` network, so we only have one `network` block.
 Note the way we put this VM in the `main` network:
 
 ```
