@@ -13,7 +13,7 @@ resource "vm" "workstation" {
   }
 
   image {
-    name     = "kula/sgl-rsync-workstation:v1"
+    name     = "${var.instruqt_team_slug}/sgl-rsync-workstation:v1"
   }
 
   resources {
@@ -38,7 +38,7 @@ resource "vm" "fileserver" {
   }
 
   image {
-    name     = "kula/sgl-rsync-fileserver:v1"
+    name     = "${var.instruqt_team_slug}/sgl-rsync-fileserver:v1"
   }
 
   resources {
