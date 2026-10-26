@@ -476,7 +476,16 @@ happens.
 A [`task`](https://docs.labs.instruqt.com/reference/content/task/) resource defines an interactive
 activity a learner must complete to finish the Lab. Each task can have one or more
 conditions, each of which can have its own `setup`, `check`, `solve`, and `cleanup` scripts.
-Let's look again at [`instructions/selective-transfers.md`](instructions/selective-transfers.md)
+Let's look again at [`instructions/selective-transfers.md`](instructions/selective-transfers.md),
+and notice at the bottom where you see the line:
+
+```
+<instruqt-task id="selective-transfers"></instruqt-task>
+```
+
+This attaches a Task to this Page in the Lab, the configuration of which is defined by the
+`resource "task" "selective-transfers"` stanza in the [`selective-transfers.hcl`](selective-transfers.hcl)
+file.
 
 A `task` resource must have a `description`, which gives a short explanation of what you are
 asking the learner to do. This task also sets the optional `success_message`, which is displayed
@@ -492,6 +501,19 @@ well as the `user`, `group`, `working_directory` where it should run. It also de
 the tasks scripts are considered a successful completion with `success_exit_codes` as well
 as defining which exit codes are considered `failure_exit_codes`. Finally, it configures
 an `environment`, defining environment variables which will be available to the task scripts.
+
+When a page is reached which has one or more Tasks, the following happens:
+
+1. When the page is first reached, any Tasks which have a `setup` script defined are ran
+2. Any task which has `check` scripts defined runs them when the learner clicks on the
+   check button in the assignment. If all of them exit with one of the defined
+   `success_exit_codes` then the check is considered successful. If any of them fail with
+   a `failure_exit_codes` then the check is failed, and the `failure_message` is returned.
+3. When the learner completes the page and moves to the next, any Tasks with `cleanup`
+   scripts are ran before moving on to the next page.
+4. Any tasks with solve scripts are used to enable both [automated testing](https://docs.labs.instruqt.com/development/automated-testing/) and page skipping
+
+See [Script Execution Flow](https://docs.labs.instruqt.com/reference/content/task/#script-execution-flow) for the full details.
 
 #### Conditions
 
