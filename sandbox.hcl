@@ -2,10 +2,6 @@ resource "secret" "ssh_key" {
   reference = "IGGYS_SSH_PRIVATE_KEY_BASE64"
 }
 
-resource "secret" "lab_images_reader_b64" {
-  reference = "LAB_IMAGES_READER_B64"
-}
-
 # Small shared network
 resource "network" "main" {
   subnet = "172.20.0.0/25"
@@ -17,9 +13,7 @@ resource "vm" "workstation" {
   }
 
   image {
-    name     = "europe-west1-docker.pkg.dev/instruqt-kula/lab-images/sgl-rsync-workstation:1789680867"
-    username = "_json_key_base64"
-    password = resource.secret.lab_images_reader_b64.value
+    name     = "${variable.instruqt_team_slug}/sgl-rsync-workstation:v1"
   }
 
   resources {
@@ -44,9 +38,7 @@ resource "vm" "fileserver" {
   }
 
   image {
-    name     = "europe-west1-docker.pkg.dev/instruqt-kula/lab-images/sgl-rsync-fileserver:1789680867"
-    username = "_json_key_base64"
-    password = resource.secret.lab_images_reader_b64.value
+    name     = "${variable.instruqt_team_slug}/sgl-rsync-fileserver:v1"
   }
 
   resources {
