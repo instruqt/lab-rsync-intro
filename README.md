@@ -479,8 +479,7 @@ the following two lines:
 ```
 
 The first line includes the `selective-transfers` task at that point in the instructions.
-We'll talk about that next. The final line provides a [completion component]
-(https://docs.labs.instruqt.com/ui-overview/adding-content/completion/), which will show
+We'll talk about that next. The final line provides a [completion component](https://docs.labs.instruqt.com/ui-overview/adding-content/completion/), which will show
 the learner's progress throughout the Lab, and gives them a "Finish & Exit" button when they
 have completed every task. Without this, the learner has no clean way to exit the Lab;
 they could just close the window, but that leaves the Lab sandbox running until a timeout
