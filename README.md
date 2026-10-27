@@ -459,7 +459,7 @@ may be substituted in the Markdown text. So, with the above `variables` set, the
 rsync -av --stats --exclude '*' --include '*.lbl' fileserver:{{FILESERVER_SRC_DIR}} {{WORKSTATION_DST_DIR}}
 ```
 
-Will have `{{FILESERVER_SRC_DIR}}` and `{{WORKSTATION_DST_DIR}`` set to the runtime
+Will have `{{FILESERVER_SRC_DIR}}` and `{{WORKSTATION_DST_DIR}` set to the runtime
 values of those two variables, allowing your instructions to be dynamic. Here we use it
 to allow us to configure those two variables as locals in [`conf.hcl`](conf.hcl), making
 it easy to change the configuration of the Lab by changing it in `conf.hcl` and then
